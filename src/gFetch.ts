@@ -85,6 +85,7 @@ export class GFetch extends Object {
   public async fetch<T>({
     queries,
     fetch,
+    additionalOptions = {}
   }: gFetchProperties): Promise<GFetchReturnWithErrors<T>> {
     // let document: DocumentNode = addTypenameToDocument(queries[0].query);
     let documentString: string = stringifyDocument(queries[0].query);
@@ -93,16 +94,24 @@ export class GFetch extends Object {
       query: documentString,
     };
 
+    let options = {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(newQueries),
+    };
+
+    if(Object.keys(additionalOptions).length > 0) {
+      Object.keys(additionalOptions).forEach(key => {
+        options[key] = additionalOptions[key]
+      });
+    }
+    
     // This is generic fetch, that is polyfilled via svelte kit
     // graph ql fetches must be POST
     // credentials include for user ssr data
     try {
-      const res = await fetch(this.path, {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newQueries),
-      });
+      const res = await fetch(this.path, options);
       // Gets the data back from the server
       const data = await res.json();
 
